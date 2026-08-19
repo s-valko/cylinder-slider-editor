@@ -1,0 +1,84 @@
+name: Apply active slide scale animation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch slider
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          if 'function scaleMesh(mesh, factor)' in s:
+              print('Active scale animation already applied')
+              raise SystemExit(0)
+
+          s = s.replace(
+              "let customImageData = {};\nlet targetAngle = deg(state.rotation);",
+              "let customImageData = {};\nlet slideScales = [];\nlet targetAngle = deg(state.rotation);"
+          )
+
+          s = s.replace(
+              "return{center,centerDepth:c.z,strips};\n}\nfunction drawSlide",
+              """return{center,centerDepth:c.z,centerPoint:c,strips};
+}
+function scaleMesh(mesh, factor){
+if(Math.abs(factor-1)<.0001)return mesh;
+const cx=mesh.centerPoint.x,cy=mesh.centerPoint.y;
+const sp=p=>({...p,x:cx+(p.x-cx)*factor,y:cy+(p.y-cy)*factor});
+return{...mesh,strips:mesh.strips.map(s=>({...s,tl:sp(s.tl),tr:sp(s.tr),br:sp(s.br),bl:sp(s.bl)}))};
+}
+function drawSlide"""
+          )
+
+          old = """const step=Math.PI*2/state.count;
+const nearest=((Math.round(-angle/step)%state.count)+state.count)%state.count;
+for(const it of items) drawSlide(textures[it.i],it.mesh,it.alpha,it.i===nearest);"""
+
+          new = """const step=Math.PI*2/state.count;
+const nearest=((Math.round(-angle/step)%state.count)+state.count)%state.count;
+
+// Active slide smoothly grows; the previous one eases back to its normal size.
+const scaleEase=1-Math.pow(1-.12,dt*60);
+for(let i=0;i<state.count;i++){
+const current=slideScales[i]??1;
+const target=i===nearest?1.12:1;
+slideScales[i]=current+(target-current)*scaleEase;
+}
+for(const it of items){
+const scaledMesh=scaleMesh(it.mesh,slideScales[it.i]??1);
+drawSlide(textures[it.i],scaledMesh,it.alpha,it.i===nearest);
+}"""
+
+          if old not in s:
+              raise SystemExit('Could not find render block to patch')
+
+          s = s.replace(old, new)
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        run: |
+          if git diff --quiet; then
+            echo "Nothing to commit"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "feat: animate active slide scale"
+          git push
