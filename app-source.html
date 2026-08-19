@@ -1,0 +1,682 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Cylinder Slider Editor — Fixed Images</title><style>
+:root{
+--panel:#111318;
+--panel2:#171a20;
+--line:#2a2f38;
+--text:#f6f7f9;
+--muted:#9097a3;
+--accent:#5ea1ff;
+--input:#0e1014;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#0b0d11;color:var(--text)}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 360px;width:100vw;height:100vh}
+.stage{position:relative;min-width:0;overflow:hidden;background:#0d0f13}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+canvas:active{cursor:grabbing}
+.stagebar{
+position:absolute;left:16px;top:16px;z-index:4;display:flex;gap:8px;align-items:center;
+pointer-events:none
+}
+.badge{
+padding:8px 10px;border-radius:10px;background:rgba(15,17,22,.72);backdrop-filter:blur(12px);
+border:1px solid rgba(255,255,255,.08);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#dfe5ee
+}
+.badge b{color:#fff}
+.stagehint{
+position:absolute;left:16px;bottom:14px;z-index:3;padding:7px 9px;border-radius:9px;
+background:rgba(15,17,22,.64);border:1px solid rgba(255,255,255,.07);
+color:rgba(255,255,255,.55);font-size:11px;pointer-events:none
+}
+.panel{height:100%;overflow:auto;background:linear-gradient(180deg,var(--panel),#0e1014);border-left:1px solid var(--line);padding:18px}
+.panel::-webkit-scrollbar{width:8px}
+.panel::-webkit-scrollbar-thumb{background:#2c3139;border-radius:10px}
+.header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:16px}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:-.02em}
+.sub{font-size:11px;color:var(--muted);line-height:1.45}
+.iconbtn{
+width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:#fff;cursor:pointer
+}
+.toolbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+button,.select,input{font:inherit}
+.btn{
+height:36px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:#e9edf4;cursor:pointer;font-size:12px
+}
+.btn:hover{border-color:#3b434f}
+.btn.primary{background:#1d5fb9;border-color:#2d75d4}
+.btn.danger{color:#ffb3b3}
+.section{
+border:1px solid var(--line);background:rgba(255,255,255,.015);border-radius:12px;margin:0 0 12px;overflow:hidden
+}
+.section-title{
+padding:11px 12px;border-bottom:1px solid var(--line);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:#cbd1da
+}
+.controls{padding:10px 12px}
+.row{margin:0 0 12px}
+.row:last-child{margin-bottom:0}
+.label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;color:#d9dee7}
+.value{color:#8fa0b8;font-variant-numeric:tabular-nums}
+input[type="range"]{width:100%;accent-color:var(--accent)}
+input[type="number"],select,input[type="text"]{
+width:100%;height:34px;border-radius:8px;border:1px solid var(--line);background:var(--input);color:#fff;padding:0 9px;outline:none
+}
+.dual{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.toggleline{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#dce2ea}
+.switch{position:relative;width:38px;height:22px;flex:0 0 auto}
+.switch input{display:none}
+.switch span{position:absolute;inset:0;background:#343a43;border-radius:999px;transition:.2s}
+.switch span:after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:white;transition:.2s}
+.switch input:checked + span{background:#2b72d1}
+.switch input:checked + span:after{transform:translateX(16px)}
+.colorrow{display:grid;grid-template-columns:1fr 44px;gap:8px;align-items:center}
+input[type="color"]{width:44px;height:34px;padding:2px;border:1px solid var(--line);border-radius:8px;background:var(--input)}
+.presetgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.preset{height:32px;font-size:11px;border-radius:8px;border:1px solid var(--line);background:#14171c;color:#d8dde5;cursor:pointer}
+.preset:hover{border-color:#46505f}
+.small{font-size:10px;color:var(--muted);line-height:1.45}
+.fileinput{display:none}
+.panel-footer{padding:8px 2px 18px;color:#6f7782;font-size:10px;line-height:1.45}
+@media(max-width:900px){
+.app{grid-template-columns:1fr}
+.stage{width:100vw;height:100dvh}
+.panel{
+position:absolute;right:0;top:0;width:min(92vw,380px);height:100dvh;z-index:20;
+box-shadow:-20px 0 60px rgba(0,0,0,.35);
+transform:translateX(100%);transition:.25s ease;
+padding-bottom:max(18px,env(safe-area-inset-bottom))
+}
+.panel.open{transform:translateX(0)}
+.mobile-toggle{
+display:block!important;position:absolute;
+right:max(14px,env(safe-area-inset-right));
+top:max(14px,env(safe-area-inset-top));
+z-index:30
+}
+.stagebar{
+left:max(12px,env(safe-area-inset-left));
+top:max(12px,env(safe-area-inset-top))
+}
+.stagehint{
+left:max(12px,env(safe-area-inset-left));
+bottom:max(10px,env(safe-area-inset-bottom));
+max-width:calc(100vw - 24px);
+white-space:nowrap;
+overflow:hidden;
+text-overflow:ellipsis
+}
+}
+@media(max-width:520px){
+.badge:nth-child(2){display:none}
+.badge{font-size:10px;padding:7px 9px}
+.stagehint{font-size:10px}
+.panel{width:100vw}
+}
+@media(max-height:520px) and (orientation:landscape){
+.stagebar{top:8px}
+.stagehint{display:none}
+.panel{width:min(82vw,420px)}
+}
+.mobile-toggle{display:none}
+</style></head><body><div class="app"><section class="stage"><canvas id="canvas"></canvas><div class="stagebar"><div class="badge"><b>Canvas</b> Cylinder Slider</div><div class="badge" id="fpsBadge">Ready</div></div><div class="stagehint">Drag = вращение · Shift + drag = наклон · Wheel = rotate · Pinch/resize safe · Double click = reset view</div><button class="iconbtn mobile-toggle" id="mobileToggle">☰</button></section><aside class="panel" id="panel"><div class="header"><div><h1>Cylinder Slider Editor</h1><div class="sub">Полный редактор геометрии, камеры и поведения цилиндрического слайдера.</div></div><button class="iconbtn" id="closePanel">×</button></div><div class="toolbar"><button class="btn primary" id="exportJson">Export JSON</button><button class="btn" id="importJsonBtn">Import JSON</button><button class="btn" id="savePng">Save PNG</button><button class="btn danger" id="resetAll">Reset</button><input class="fileinput" type="file" id="importJson" accept=".json,application/json"></div><div class="section"><div class="section-title">Presets</div><div class="controls"><div class="presetgrid"><button class="preset" data-preset="reference">Reference</button><button class="preset" data-preset="wide">Wide</button><button class="preset" data-preset="tight">Tight</button><button class="preset" data-preset="dramatic">Dramatic</button><button class="preset" data-preset="flat">Flat-ish</button><button class="preset" data-preset="rear">Rear visible</button></div></div></div><div class="section"><div class="section-title">Geometry</div><div class="controls"><div class="row"><div class="label"><span>Slide count</span><span class="value" data-v="count"></span></div><input type="range" min="3" max="16" step="1" data-key="count"></div><div class="row"><div class="label"><span>Radius</span><span class="value" data-v="radius"></span></div><input type="range" min="140" max="700" step="1" data-key="radius"></div><div class="row"><div class="label"><span>Slide height</span><span class="value" data-v="height"></span></div><input type="range" min="80" max="500" step="1" data-key="height"></div><div class="row"><div class="label"><span>Gap between slides</span><span class="value" data-v="gap"></span></div><input type="range" min="0" max="24" step=".1" data-key="gap"></div><div class="row"><div class="label"><span>Curve segments / slide</span><span class="value" data-v="segments"></span></div><input type="range" min="4" max="60" step="1" data-key="segments"></div><div class="row"><div class="label"><span>Vertical stretch</span><span class="value" data-v="verticalScale"></span></div><input type="range" min=".5" max="1.8" step=".01" data-key="verticalScale"></div></div></div><div class="section"><div class="section-title">Responsive / Mobile</div><div class="controls"><div class="row toggleline"><span>Auto responsive</span><label class="switch"><input type="checkbox" data-key="responsive"><span></span></label></div><div class="row"><div class="label"><span>Mobile minimum scale</span><span class="value" data-v="responsiveMinScale"></span></div><input type="range" min=".25" max=".7" step=".01" data-key="responsiveMinScale"></div><div class="row"><div class="label"><span>Maximum scale</span><span class="value" data-v="responsiveMaxScale"></span></div><input type="range" min=".8" max="1.5" step=".01" data-key="responsiveMaxScale"></div><div class="row"><div class="label"><span>Safe side margin</span><span class="value" data-v="responsiveMargin"></span></div><input type="range" min="0" max="80" step="1" data-key="responsiveMargin"></div><div class="small">
+В responsive-режиме редактор хранит размеры как desktop-базу, а на маленьких экранах вся 3D-сцена автоматически масштабируется и остаётся внутри viewport.
+</div></div></div><div class="section"><div class="section-title">Camera / View</div><div class="controls"><div class="row"><div class="label"><span>Tilt X</span><span class="value" data-v="pitch"></span></div><input type="range" min="-45" max="45" step=".1" data-key="pitch"></div><div class="row"><div class="label"><span>Roll Z</span><span class="value" data-v="roll"></span></div><input type="range" min="-30" max="30" step=".1" data-key="roll"></div><div class="row"><div class="label"><span>Perspective / focal</span><span class="value" data-v="focal"></span></div><input type="range" min="500" max="1800" step="5" data-key="focal"></div><div class="row"><div class="label"><span>Camera distance</span><span class="value" data-v="cameraZ"></span></div><input type="range" min="700" max="2600" step="5" data-key="cameraZ"></div><div class="row"><div class="label"><span>Position X</span><span class="value" data-v="offsetX"></span></div><input type="range" min="-500" max="500" step="1" data-key="offsetX"></div><div class="row"><div class="label"><span>Position Y</span><span class="value" data-v="offsetY"></span></div><input type="range" min="-350" max="350" step="1" data-key="offsetY"></div><div class="row"><div class="label"><span>Global rotation</span><span class="value" data-v="rotation"></span></div><input type="range" min="-180" max="180" step=".1" data-key="rotation"></div></div></div><div class="section"><div class="section-title">Visibility / Appearance</div><div class="controls"><div class="row"><div class="label"><span>Rear opacity</span><span class="value" data-v="rearOpacity"></span></div><input type="range" min="0" max="1" step=".01" data-key="rearOpacity"></div><div class="row"><div class="label"><span>Front emphasis</span><span class="value" data-v="frontBoost"></span></div><input type="range" min="0" max="1" step=".01" data-key="frontBoost"></div><div class="row"><div class="label"><span>Seam opacity</span><span class="value" data-v="seamOpacity"></span></div><input type="range" min="0" max="1" step=".01" data-key="seamOpacity"></div><div class="row toggleline"><span>Show guide rings</span><label class="switch"><input type="checkbox" data-key="guides"><span></span></label></div><div class="row toggleline"><span>Highlight active slide</span><label class="switch"><input type="checkbox" data-key="highlight"><span></span></label></div><div class="row toggleline"><span>Transparent background</span><label class="switch"><input type="checkbox" data-key="transparent"><span></span></label></div><div class="row colorrow"><div><div class="label" style="margin:0"><span>Background</span></div><div class="small">Используется если transparency выключена.</div></div><input type="color" data-key="background"></div></div></div><div class="section"><div class="section-title">Slide images</div><div class="controls"><div class="row"><div class="label"><span>Selected slide</span><span class="value" id="selectedSlideLabel">1</span></div><input type="range" min="1" max="16" step="1" id="selectedSlide"></div><div class="row"><button class="btn primary" id="uploadImageBtn" style="width:100%">Upload / replace image</button><input class="fileinput" type="file" id="uploadImage" accept="image/*"></div><div class="row"><button class="btn" id="resetSlideImage" style="width:100%">Reset selected image</button></div><div class="small">
+Картинка натягивается на весь слайд как <b>cover</b>: без полей, на всю ширину и высоту, и затем изгибается вместе с поверхностью цилиндра.
+</div></div></div><div class="section"><div class="section-title">Motion</div><div class="controls"><div class="row toggleline"><span>Auto rotate</span><label class="switch"><input type="checkbox" data-key="autoRotate"><span></span></label></div><div class="row"><div class="label"><span>Auto speed</span><span class="value" data-v="autoSpeed"></span></div><input type="range" min="-2" max="2" step=".01" data-key="autoSpeed"></div><div class="row"><div class="label"><span>Snap strength</span><span class="value" data-v="snap"></span></div><input type="range" min=".02" max=".35" step=".01" data-key="snap"></div><div class="row"><div class="label"><span>Drag sensitivity</span><span class="value" data-v="dragSensitivity"></span></div><input type="range" min=".001" max=".02" step=".001" data-key="dragSensitivity"></div></div></div><div class="section"><div class="section-title">Quick dimensions</div><div class="controls"><div class="dual"><div><div class="label"><span>Radius</span></div><input type="number" min="140" max="700" step="1" data-number="radius"></div><div><div class="label"><span>Height</span></div><input type="number" min="80" max="500" step="1" data-number="height"></div></div></div></div><div class="panel-footer">
+Конфигурация автоматически сохраняется в localStorage. Export JSON можно потом импортировать обратно.
+</div></aside></div><script>
+(() => {
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const panel = document.getElementById('panel');
+const mobileToggle = document.getElementById('mobileToggle');
+const closePanel = document.getElementById('closePanel');
+const fpsBadge = document.getElementById('fpsBadge');
+const defaults = {
+count: 8,
+radius: 405,
+height: 285,
+gap: 2.0,
+segments: 28,
+verticalScale: 1,
+pitch: 18,
+roll: 0,
+focal: 1150,
+cameraZ: 1420,
+offsetX: 0,
+offsetY: 0,
+rotation: 0,
+rearOpacity: .34,
+frontBoost: .55,
+seamOpacity: .22,
+guides: false,
+highlight: true,
+transparent: false,
+background: '#111318',
+autoRotate: false,
+autoSpeed: .28,
+snap: .12,
+dragSensitivity: .006,
+responsive: true,
+responsiveMinScale: .38,
+responsiveMaxScale: 1.15,
+responsiveMargin: 24,
+};
+const presets = {
+reference: {radius:405,height:285,gap:2,pitch:18,roll:0,focal:1150,cameraZ:1420,rearOpacity:.34,frontBoost:.55},
+wide: {radius:520,height:250,gap:4,pitch:13,focal:1250,cameraZ:1520,rearOpacity:.28,frontBoost:.62},
+tight: {radius:330,height:300,gap:.5,pitch:18,focal:1050,cameraZ:1320,rearOpacity:.42,frontBoost:.48},
+dramatic: {radius:430,height:280,gap:3,pitch:30,roll:-5,focal:900,cameraZ:1250,rearOpacity:.38,frontBoost:.72},
+flat: {radius:600,height:235,gap:6,pitch:7,focal:1600,cameraZ:1900,rearOpacity:.22,frontBoost:.5},
+rear: {radius:390,height:270,gap:2,pitch:27,focal:1080,cameraZ:1370,rearOpacity:.72,frontBoost:.35},
+};
+let state = loadState();
+let textures = [];
+let slideImages = [];
+let customImageData = {};
+let targetAngle = deg(state.rotation);
+let angle = targetAngle;
+let dragging = false;
+const pointers = new Map();
+let dragStartX = 0;
+let dragStartY = 0;
+let dragStartAngle = 0;
+let dragStartPitch = 0;
+let lastTime = performance.now();
+function deg(v){ return v*Math.PI/180; }
+function rad(v){ return v*180/Math.PI; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function loadState(){
+try{
+const raw = localStorage.getItem('cylinder-slider-editor');
+if(raw) return {...defaults,...JSON.parse(raw)};
+}catch(e){}
+return {...defaults};
+}
+function saveState(){
+localStorage.setItem('cylinder-slider-editor', JSON.stringify(state));
+}
+const sampleImages = [
+'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1511497584788-876760111969?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1501854140801-50d01698950b?auto=format&fit=crop&w=1400&q=85',
+'https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1400&q=85'
+];
+function createTextures(){
+textures = Array.from({length: state.count}, (_,idx)=>makeFallbackTexture(idx));
+slideImages = Array.from({length: state.count}, ()=>null);
+for(let i=0;i<state.count;i++){
+const custom = customImageData[i];
+if(custom){
+loadImageIntoSlide(i, custom);
+}else{
+loadImageIntoSlide(i, sampleImages[i % sampleImages.length]);
+}
+}
+}
+function makeFallbackTexture(idx){
+const off=document.createElement('canvas');
+off.width=1400; off.height=800;
+const g=off.getContext('2d');
+const hue=(idx*47+12)%360;
+const hue2=(hue+52)%360;
+const grad=g.createLinearGradient(0,0,1400,800);
+grad.addColorStop(0,`hsl(${hue} 85% 50%)`);
+grad.addColorStop(.5,`hsl(${hue2} 65% 22%)`);
+grad.addColorStop(1,'#080a0f');
+g.fillStyle=grad;
+g.fillRect(0,0,1400,800);
+for(let i=0;i<9;i++){
+const x=80+((idx*111+i*179)%1250);
+const y=60+((idx*83+i*127)%680);
+const r=80+((idx*29+i*41)%170);
+const rg=g.createRadialGradient(x,y,0,x,y,r);
+rg.addColorStop(0,'rgba(255,255,255,.25)');
+rg.addColorStop(.25,'rgba(255,255,255,.07)');
+rg.addColorStop(1,'rgba(255,255,255,0)');
+g.fillStyle=rg;
+g.beginPath();g.arc(x,y,r,0,Math.PI*2);g.fill();
+}
+return off;
+}
+function loadImageIntoSlide(index, src){
+const img = new Image();
+img.crossOrigin = 'anonymous';
+img.onload = () => {
+slideImages[index] = img;
+textures[index] = buildCoverTexture(img);
+};
+img.onerror = () => {
+slideImages[index] = null;
+};
+img.src = src;
+}
+function buildCoverTexture(img){
+const off=document.createElement('canvas');
+off.width=1400;
+off.height=800;
+const g=off.getContext('2d');
+const targetRatio=off.width/off.height;
+const imageRatio=img.naturalWidth/img.naturalHeight;
+let sx=0, sy=0, sw=img.naturalWidth, sh=img.naturalHeight;
+if(imageRatio > targetRatio){
+sw = img.naturalHeight * targetRatio;
+sx = (img.naturalWidth - sw) / 2;
+} else {
+sh = img.naturalWidth / targetRatio;
+sy = (img.naturalHeight - sh) / 2;
+}
+g.drawImage(img, sx, sy, sw, sh, 0, 0, off.width, off.height);
+return off;
+}
+function resize(){
+const rect=canvas.getBoundingClientRect();
+const dpr=Math.min(window.devicePixelRatio||1,2);
+canvas.width=Math.max(1,Math.floor(rect.width*dpr));
+canvas.height=Math.max(1,Math.floor(rect.height*dpr));
+ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function rotateX(p,a){
+const c=Math.cos(a),s=Math.sin(a);
+return {x:p.x,y:p.y*c-p.z*s,z:p.y*s+p.z*c};
+}
+function rotateZ(p,a){
+const c=Math.cos(a),s=Math.sin(a);
+return {x:p.x*c-p.y*s,y:p.x*s+p.y*c,z:p.z};
+}
+function getResponsiveScale(W,H){
+if(!state.responsive) return 1;
+// Reference working area used when tuning the desktop geometry.
+// Width is the dominant constraint for a horizontal cylinder,
+// while height prevents it from overflowing short landscape phones.
+const usableW = Math.max(220, W - state.responsiveMargin * 2);
+const usableH = Math.max(220, H - state.responsiveMargin * 2);
+const byWidth = usableW / 1180;
+const byHeight = usableH / 720;
+return clamp(
+Math.min(byWidth, byHeight),
+state.responsiveMinScale,
+state.responsiveMaxScale
+);
+}
+function getResponsiveOffset(W,H,scale){
+if(!state.responsive) return {x:state.offsetX, y:state.offsetY};
+// Keep manual offsets proportional to the scene on smaller screens.
+// Add a tiny vertical lift in portrait so the carousel sits visually centered.
+const portraitLift = H > W ? -H * 0.015 : 0;
+return {
+x: state.offsetX * scale,
+y: state.offsetY * scale + portraitLift
+};
+}
+function project(p,W,H){
+const scale = getResponsiveScale(W,H);
+const offset = getResponsiveOffset(W,H,scale);
+// Scale the whole virtual scene instead of mutating editor values.
+// This keeps one configuration usable on desktop, tablet and mobile.
+let q = {
+x: p.x * scale,
+y: p.y * scale,
+z: p.z * scale
+};
+q=rotateX(q,deg(state.pitch));
+q=rotateZ(q,deg(state.roll));
+// Scale focal length and camera distance by the same factor.
+// Their ratio stays stable, so perspective character does not change.
+const focal = state.focal * scale;
+const cameraZ = state.cameraZ * scale;
+const denom=Math.max(90*scale,cameraZ-q.z);
+const k=focal/denom;
+return {
+x:W*.5+offset.x+q.x*k,
+y:H*.5+offset.y-q.y*k,
+z:q.z,
+k
+};
+}
+function surfacePoint(theta,y,W,H){
+return project({
+x:Math.sin(theta)*state.radius,
+y:y*state.verticalScale,
+z:Math.cos(theta)*state.radius
+},W,H);
+}
+function solveAffine(s0,s1,s2,d0,d1,d2){
+const det=s0.x*(s1.y-s2.y)+s1.x*(s2.y-s0.y)+s2.x*(s0.y-s1.y);
+if(Math.abs(det)<1e-8)return null;
+function coeff(v0,v1,v2){
+const A=(v0*(s1.y-s2.y)+v1*(s2.y-s0.y)+v2*(s0.y-s1.y))/det;
+const C=(v0*(s2.x-s1.x)+v1*(s0.x-s2.x)+v2*(s1.x-s0.x))/det;
+const E=(v0*(s1.x*s2.y-s2.x*s1.y)+v1*(s2.x*s0.y-s0.x*s2.y)+v2*(s0.x*s1.y-s1.x*s0.y))/det;
+return[A,C,E];
+}
+const X=coeff(d0.x,d1.x,d2.x),Y=coeff(d0.y,d1.y,d2.y);
+return{a:X[0],c:X[1],e:X[2],b:Y[0],d:Y[1],f:Y[2]};
+}
+function drawTri(img,s0,s1,s2,d0,d1,d2,alpha){
+const m=solveAffine(s0,s1,s2,d0,d1,d2);
+if(!m)return;
+ctx.save();
+ctx.globalAlpha=alpha;
+ctx.beginPath();ctx.moveTo(d0.x,d0.y);ctx.lineTo(d1.x,d1.y);ctx.lineTo(d2.x,d2.y);ctx.closePath();ctx.clip();
+// IMPORTANT: compose the texture mapping with the existing DPR transform.
+// setTransform() would wipe the Retina/devicePixelRatio transform and make
+// photos appear tiny / shifted inside an otherwise correctly sized slide.
+ctx.transform(m.a,m.b,m.c,m.d,m.e,m.f);
+ctx.drawImage(img,0,0);
+ctx.restore();
+}
+function buildSlide(i,W,H){
+const step=Math.PI*2/state.count;
+const maxGap=Math.max(0,rad(step)-1);
+const gap=deg(Math.min(state.gap,maxGap));
+const span=Math.max(.01,step-gap);
+const center=i*step+angle;
+const start=center-span/2;
+const end=center+span/2;
+const segs=Math.max(4,Math.round(state.segments));
+const strips=[];
+for(let s=0;s<segs;s++){
+const t0=s/segs,t1=(s+1)/segs;
+const a0=start+(end-start)*t0;
+const a1=start+(end-start)*t1;
+const tl=surfacePoint(a0,state.height/2,W,H);
+const tr=surfacePoint(a1,state.height/2,W,H);
+const br=surfacePoint(a1,-state.height/2,W,H);
+const bl=surfacePoint(a0,-state.height/2,W,H);
+const mid=(a0+a1)/2;
+strips.push({t0,t1,tl,tr,br,bl,depth:Math.cos(mid)*state.radius});
+}
+const c=project({x:Math.sin(center)*state.radius,y:0,z:Math.cos(center)*state.radius},W,H);
+return{center,centerDepth:c.z,strips};
+}
+function drawSlide(img,mesh,alpha,isActive){
+const sw=img.width,sh=img.height;
+const strips=[...mesh.strips].sort((a,b)=>a.depth-b.depth);
+for(const s of strips){
+const x0=sw*s.t0,x1=sw*s.t1;
+const stl={x:x0,y:0},str={x:x1,y:0},sbr={x:x1,y:sh},sbl={x:x0,y:sh};
+drawTri(img,stl,str,sbr,s.tl,s.tr,s.br,alpha);
+drawTri(img,stl,sbr,sbl,s.tl,s.br,s.bl,alpha);
+}
+if(state.seamOpacity>0){
+const first=mesh.strips[0],last=mesh.strips[mesh.strips.length-1];
+ctx.save();
+ctx.strokeStyle=isActive&&state.highlight?`rgba(255,255,255,${Math.max(state.seamOpacity,.85)})`:`rgba(255,255,255,${state.seamOpacity})`;
+ctx.lineWidth=isActive&&state.highlight?1.5:0.75;
+if(isActive&&state.highlight){ctx.shadowColor='rgba(255,255,255,.25)';ctx.shadowBlur=18}
+ctx.beginPath();
+mesh.strips.forEach((s,idx)=>{if(idx===0)ctx.moveTo(s.tl.x,s.tl.y);ctx.lineTo(s.tr.x,s.tr.y)});
+ctx.stroke();
+ctx.beginPath();
+mesh.strips.forEach((s,idx)=>{if(idx===0)ctx.moveTo(s.bl.x,s.bl.y);ctx.lineTo(s.br.x,s.br.y)});
+ctx.stroke();
+ctx.beginPath();
+ctx.moveTo(first.tl.x,first.tl.y);ctx.lineTo(first.bl.x,first.bl.y);
+ctx.moveTo(last.tr.x,last.tr.y);ctx.lineTo(last.br.x,last.br.y);
+ctx.stroke();
+ctx.restore();
+}
+}
+function drawGuides(W,H){
+if(!state.guides)return;
+ctx.save();
+ctx.setLineDash([7,8]);ctx.lineWidth=1;ctx.strokeStyle='rgba(255,255,255,.20)';
+for(const y of [state.height/2,-state.height/2]){
+ctx.beginPath();
+for(let i=0;i<=100;i++){
+const a=i/100*Math.PI*2;
+const p=surfacePoint(a,y,W,H);
+if(i===0)ctx.moveTo(p.x,p.y);else ctx.lineTo(p.x,p.y);
+}
+ctx.closePath();ctx.stroke();
+}
+ctx.restore();
+}
+function render(now){
+const W=canvas.clientWidth,H=canvas.clientHeight;
+if(!state.transparent){
+ctx.fillStyle=state.background;
+ctx.fillRect(0,0,W,H);
+}else{
+ctx.clearRect(0,0,W,H);
+// checkerboard preview
+const s=18;
+for(let y=0;y<H;y+=s){
+for(let x=0;x<W;x+=s){
+ctx.fillStyle=((x/s+y/s)%2===0)?'#181b20':'#21252b';
+ctx.fillRect(x,y,s,s);
+}
+}
+}
+const dt=Math.min(.05,(now-lastTime)/1000);
+lastTime=now;
+if(state.autoRotate && !dragging){
+targetAngle += state.autoSpeed*dt;
+angle = targetAngle;
+state.rotation = rad(angle)%360;
+} else if(!dragging){
+angle += (targetAngle-angle)*state.snap;
+}
+drawGuides(W,H);
+const items=[];
+for(let i=0;i<state.count;i++){
+const mesh=buildSlide(i,W,H);
+const front=Math.cos(mesh.center);
+const t=(front+1)/2;
+const alpha=clamp(state.rearOpacity+(1-state.rearOpacity)*(t*(1-state.frontBoost)+Math.pow(t,2)*state.frontBoost),0,1);
+items.push({i,mesh,alpha,front});
+}
+items.sort((a,b)=>a.mesh.centerDepth-b.mesh.centerDepth);
+const step=Math.PI*2/state.count;
+const nearest=((Math.round(-angle/step)%state.count)+state.count)%state.count;
+for(const it of items) drawSlide(textures[it.i],it.mesh,it.alpha,it.i===nearest);
+fpsBadge.textContent=`${state.count} slides · R ${Math.round(state.radius)} · H ${Math.round(state.height)}`;
+requestAnimationFrame(render);
+}
+// UI
+const formatters={
+count:v=>`${Math.round(v)}`,
+radius:v=>`${Math.round(v)} px`,
+height:v=>`${Math.round(v)} px`,
+gap:v=>`${(+v).toFixed(1)}°`,
+segments:v=>`${Math.round(v)}`,
+verticalScale:v=>`${(+v).toFixed(2)}×`,
+pitch:v=>`${(+v).toFixed(1)}°`,
+roll:v=>`${(+v).toFixed(1)}°`,
+focal:v=>`${Math.round(v)}`,
+cameraZ:v=>`${Math.round(v)}`,
+offsetX:v=>`${Math.round(v)} px`,
+offsetY:v=>`${Math.round(v)} px`,
+rotation:v=>`${(+v).toFixed(1)}°`,
+rearOpacity:v=>`${Math.round(v*100)}%`,
+frontBoost:v=>`${Math.round(v*100)}%`,
+seamOpacity:v=>`${Math.round(v*100)}%`,
+autoSpeed:v=>`${(+v).toFixed(2)} rad/s`,
+snap:v=>`${(+v).toFixed(2)}`,
+dragSensitivity:v=>`${(+v).toFixed(3)}`,
+responsiveMinScale:v=>`${(+v).toFixed(2)}×`,
+responsiveMaxScale:v=>`${(+v).toFixed(2)}×`,
+responsiveMargin:v=>`${Math.round(v)} px`
+};
+function syncUI(){
+if(document.getElementById('selectedSlide')) syncImageControls();
+document.querySelectorAll('[data-key]').forEach(el=>{
+const k=el.dataset.key;
+if(el.type==='checkbox')el.checked=!!state[k];
+else if(el.type==='color')el.value=state[k];
+else el.value=state[k];
+});
+document.querySelectorAll('[data-number]').forEach(el=>el.value=state[el.dataset.number]);
+document.querySelectorAll('[data-v]').forEach(el=>{
+const k=el.dataset.v;
+el.textContent=(formatters[k]||String)(state[k]);
+});
+}
+function onStateChanged(key){
+if(key==='count'){
+state.count=Math.round(state.count);
+createTextures();
+// keep rotation coherent
+targetAngle=deg(state.rotation);
+angle=targetAngle;
+}
+if(key==='rotation'){
+targetAngle=deg(state.rotation);
+if(dragging)angle=targetAngle;
+}
+saveState();
+syncUI();
+}
+document.querySelectorAll('[data-key]').forEach(el=>{
+const key=el.dataset.key;
+const event=(el.type==='checkbox'||el.type==='color')?'change':'input';
+el.addEventListener(event,()=>{
+state[key]=el.type==='checkbox'?el.checked:el.type==='color'?el.value:+el.value;
+onStateChanged(key);
+});
+});
+document.querySelectorAll('[data-number]').forEach(el=>{
+el.addEventListener('input',()=>{
+const key=el.dataset.number;
+state[key]=+el.value;
+onStateChanged(key);
+});
+});
+document.querySelectorAll('[data-preset]').forEach(btn=>{
+btn.addEventListener('click',()=>{
+Object.assign(state,presets[btn.dataset.preset]);
+targetAngle=deg(state.rotation);
+angle=targetAngle;
+saveState();syncUI();
+});
+});
+canvas.addEventListener('pointerdown',e=>{
+pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+dragging=true;
+dragStartX=e.clientX;
+dragStartY=e.clientY;
+dragStartAngle=angle;
+dragStartPitch=state.pitch;
+canvas.setPointerCapture?.(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+if(!pointers.has(e.pointerId)) return;
+pointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+if(!dragging)return;
+const pts=[...pointers.values()];
+// Two fingers on touch: vertical movement adjusts camera tilt.
+if(pts.length>=2){
+const avgY=(pts[0].y+pts[1].y)/2;
+state.pitch=clamp(dragStartPitch-(avgY-dragStartY)*.12,-45,45);
+syncUI();
+return;
+}
+if(e.shiftKey){
+state.pitch=clamp(dragStartPitch-(e.clientY-dragStartY)*.18,-45,45);
+syncUI();
+}else{
+angle=dragStartAngle+(e.clientX-dragStartX)*state.dragSensitivity;
+targetAngle=angle;
+state.rotation=rad(angle)%360;
+syncUI();
+}
+});
+function endDrag(e){
+if(e && e.pointerId!=null) pointers.delete(e.pointerId);
+if(pointers.size>0) return;
+if(!dragging)return;
+dragging=false;
+const step=Math.PI*2/state.count;
+const nearest=Math.round(angle/step)*step;
+targetAngle=nearest;
+state.rotation=rad(targetAngle)%360;
+saveState();
+syncUI();
+}
+canvas.addEventListener('pointerup',endDrag);
+canvas.addEventListener('pointercancel',endDrag);
+canvas.addEventListener('wheel',e=>{
+e.preventDefault();
+const step=Math.PI*2/state.count;
+targetAngle += (e.deltaY>0||e.deltaX>0)?-step:step;
+state.rotation=rad(targetAngle)%360;
+saveState();syncUI();
+},{passive:false});
+canvas.addEventListener('dblclick',()=>{
+state.pitch=defaults.pitch;state.roll=defaults.roll;state.offsetX=0;state.offsetY=0;state.rotation=0;
+angle=targetAngle=0;saveState();syncUI();
+});
+document.getElementById('resetAll').addEventListener('click',()=>{
+state={...defaults};angle=targetAngle=deg(state.rotation);createTextures();saveState();syncUI();
+});
+document.getElementById('savePng').addEventListener('click',()=>{
+const a=document.createElement('a');
+a.download='cylinder-slider.png';
+a.href=canvas.toDataURL('image/png');
+a.click();
+});
+document.getElementById('exportJson').addEventListener('click',()=>{
+const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download='cylinder-slider-config.json';a.click();
+setTimeout(()=>URL.revokeObjectURL(url),500);
+});
+const importInput=document.getElementById('importJson');
+document.getElementById('importJsonBtn').addEventListener('click',()=>importInput.click());
+importInput.addEventListener('change',async()=>{
+const file=importInput.files?.[0];
+if(!file)return;
+try{
+const data=JSON.parse(await file.text());
+state={...defaults,...data};
+angle=targetAngle=deg(state.rotation);
+createTextures();saveState();syncUI();
+}catch(e){alert('Не удалось прочитать JSON-конфигурацию.')}
+importInput.value='';
+});
+const selectedSlide = document.getElementById('selectedSlide');
+const selectedSlideLabel = document.getElementById('selectedSlideLabel');
+const uploadImage = document.getElementById('uploadImage');
+function syncImageControls(){
+selectedSlide.max = state.count;
+if(+selectedSlide.value > state.count) selectedSlide.value = state.count;
+if(!selectedSlide.value) selectedSlide.value = 1;
+selectedSlideLabel.textContent = selectedSlide.value;
+}
+selectedSlide.addEventListener('input',()=>{
+selectedSlideLabel.textContent = selectedSlide.value;
+});
+document.getElementById('uploadImageBtn').addEventListener('click',()=>uploadImage.click());
+uploadImage.addEventListener('change',()=>{
+const file=uploadImage.files?.[0];
+if(!file) return;
+const idx=(+selectedSlide.value||1)-1;
+const reader=new FileReader();
+reader.onload=()=>{
+customImageData[idx]=reader.result;
+loadImageIntoSlide(idx, reader.result);
+};
+reader.readAsDataURL(file);
+uploadImage.value='';
+});
+document.getElementById('resetSlideImage').addEventListener('click',()=>{
+const idx=(+selectedSlide.value||1)-1;
+delete customImageData[idx];
+textures[idx]=makeFallbackTexture(idx);
+loadImageIntoSlide(idx, sampleImages[idx % sampleImages.length]);
+});
+mobileToggle.addEventListener('click',()=>panel.classList.add('open'));
+closePanel.addEventListener('click',()=>panel.classList.remove('open'));
+window.addEventListener('resize',resize);
+window.addEventListener('orientationchange',()=>setTimeout(resize,120));
+createTextures();
+resize();
+syncUI();
+requestAnimationFrame(render);
+})();
+</script></body></html>
