@@ -53,6 +53,46 @@ for(const it of items){
     );
   }
 
+  if(!source.includes('// One slide per wheel gesture')){
+    source=source.replace(
+      `canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const step=Math.PI*2/state.count;
+  targetAngle += (e.deltaY>0||e.deltaX>0)?-step:step;
+  state.rotation=rad(targetAngle)%360;
+  saveState();syncUI();
+},{passive:false});`,
+      `let wheelGestureActive=false;
+let wheelGestureTimer=null;
+let wheelAccumulator=0;
+
+// One slide per wheel gesture
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const dominant=Math.abs(e.deltaY)>=Math.abs(e.deltaX)?e.deltaY:e.deltaX;
+  if(!Number.isFinite(dominant)||dominant===0)return;
+
+  clearTimeout(wheelGestureTimer);
+  wheelGestureTimer=setTimeout(()=>{
+    wheelGestureActive=false;
+    wheelAccumulator=0;
+  },180);
+
+  if(wheelGestureActive)return;
+
+  wheelAccumulator+=dominant;
+  if(Math.abs(wheelAccumulator)<12)return;
+
+  const step=Math.PI*2/state.count;
+  targetAngle+=wheelAccumulator>0?-step:step;
+  wheelAccumulator=0;
+  wheelGestureActive=true;
+  state.rotation=rad(targetAngle)%360;
+  saveState();syncUI();
+},{passive:false});`
+    );
+  }
+
   document.open();
   document.write(source);
   document.close();
