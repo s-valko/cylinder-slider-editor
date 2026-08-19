@@ -24,6 +24,7 @@ jobs:
           rm -rf _site
           mkdir -p _site
           rsync -a --exclude '.git' --exclude '.github' --exclude '_site' ./ _site/
+          touch _site/.nojekyll
 
       - name: Publish to gh-pages
         uses: JamesIves/github-pages-deploy-action@v4
